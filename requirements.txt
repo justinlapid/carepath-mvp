@@ -8,3 +8,4 @@ openai
 pdf2image
 python-dotenv
 weasyprint
+gunicorn
