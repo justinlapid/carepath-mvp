@@ -82,17 +82,34 @@ def extract_text(filepath, filename):
         for para in doc.paragraphs:
             text += para.text + '\n'
     elif ext == 'pdf':
+    # First, get the total number of pages
+    with open(filepath, 'rb') as file:
+        reader = PyPDF2.PdfReader(file)
+        page_count = len(reader.pages)
+
+    # Process each page individually
+    for page_num in range(page_count):
+        # --- Step A: Extract text directly if possible ---
         with open(filepath, 'rb') as file:
             reader = PyPDF2.PdfReader(file)
-            for page_num, page in enumerate(reader.pages):
-                extracted_page_text = page.extract_text()
-                if extracted_page_text:
-                    text += f"\nPage {page_num + 1}:\n" + extracted_page_text + '\n'
-                else:
-                    images = convert_from_path(filepath)
-                    if page_num < len(images):
-                        text += f"\nPage {page_num + 1} (OCR):\n"
-                        text += pytesseract.image_to_string(images[page_num]) + '\n'
+            extracted_page_text = reader.pages[page_num].extract_text()
+
+        if extracted_page_text and extracted_page_text.strip():
+            # If we got text, just add it
+            text += f"\nPage {page_num+1}:\n{extracted_page_text}\n"
+        else:
+            # --- Step B: If no text, do OCR on just that single page ---
+            # Convert only the current page to an image at a lower DPI (e.g. 100) to reduce memory usage
+            images = convert_from_path(
+                filepath,
+                first_page=page_num+1,
+                last_page=page_num+1,
+                dpi=100  # lower DPI => lower quality but less memory
+            )
+            # There should be exactly 1 image in "images" because we used first_page=last_page=page_num+1
+            ocr_text = pytesseract.image_to_string(images[0])
+            text += f"\nPage {page_num+1} (OCR):\n{ocr_text}\n"
+
     elif ext in {'png', 'jpg', 'jpeg', 'gif'}:
         img = Image.open(filepath)
         text = pytesseract.image_to_string(img)
