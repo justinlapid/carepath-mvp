@@ -1,0 +1,172 @@
+<!-- templates/summary.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CarePath Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 40px;
+            background-color: #ffffff;
+            position: relative;
+        }
+        .logo {
+            position: fixed;
+            top: -60px; /* Move into the header */
+            left: 40px; /* Move into the margin */
+            opacity: 0.5;
+        }
+        .logo img {
+            max-width: 100px;
+            height: auto;
+        }
+        /* Minimalistic Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            text-align: left; /* Left align tables */
+            font-size: 12px; /* Smaller text */
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 8px 10px; /* Reduced padding */
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #333333;
+            width: 30%;
+        }
+        td {
+            background-color: #ffffff;
+            color: #333333;
+        }
+        h2 {
+            color: #333333;
+            margin-top: 30px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+            text-align: left; /* Left align title */
+        }
+        h3 {
+            margin-top: 20px;
+            color: #333333;
+            text-align: left; /* Left align section headers */
+        }
+        h4 {
+            margin-top: 15px;
+            color: #333333;
+            font-size: 14px; /* Smaller sub-headers */
+        }
+        /* Print Date Styles */
+        .print-date {
+            position: fixed;
+            bottom: -20px; /* Move into the footer */
+            right: 40px; /* Move into the margin */
+            font-size: 8px;
+            color: #999999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed Company Logo -->
+    <div class="logo">
+        <img src="{{ url_for('static', filename='company_logo.png') }}" alt="CarePath Logo">
+    </div>
+
+    <!-- Dynamic Title: LAST NAME, FIRST NAME (DOB) -->
+    <h2>
+        {{ extracted_data['Demographics'].get('Last Name', 'Unknown') }}, 
+        {{ extracted_data['Demographics'].get('First Name', 'Unknown') }} 
+        ({{ extracted_data['Demographics'].get('DOB', 'Unknown') }})
+    </h2>
+
+    <!-- Demographics Section -->
+    {% set demographics = extracted_data['Demographics'] | dictsort %}
+    {% set demographics_filtered = demographics | selectattr('1', '!=', '') | list %}
+    {% if demographics_filtered %}
+        <h3>Demographics</h3>
+        <table>
+            <tbody>
+                {% for key, value in demographics_filtered %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- Insurance Section -->
+    {% set insurance = extracted_data['Insurance'] | dictsort %}
+    {% set insurance_filtered = insurance | selectattr('1', '!=', '') | list %}
+    {% if insurance_filtered %}
+        <h3>Insurance</h3>
+        <table>
+            <tbody>
+                {% for key, value in insurance_filtered %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- Clinical Details Section -->
+    {% set clinical_details = extracted_data['Clinical Details'] | dictsort %}
+    {% set clinical_details_filtered = clinical_details | selectattr('1', '!=', '') | list %}
+    {% if clinical_details_filtered %}
+        <h3>Clinical Details</h3>
+        <table>
+            <tbody>
+                {% for key, value in clinical_details_filtered %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- Medical Information Section -->
+    {% set medical_info = extracted_data['Medical Information'] %}
+    {% set medical_info_filtered = {} %}
+    {% for section, items in medical_info.items() %}
+        {% set non_empty_items = items | select('!=', '') | list %}
+        {% if non_empty_items %}
+            {% set _ = medical_info_filtered.update({section: non_empty_items}) %}
+        {% endif %}
+    {% endfor %}
+    {% if medical_info_filtered %}
+        <h3>Medical Information</h3>
+        {% for section, items in medical_info_filtered.items() %}
+            <h4>{{ section }}</h4>
+            <table>
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <th>{{ section }} {{ loop.index }}</th>
+                            <td>{{ item }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Print Date -->
+    <div class="print-date">
+        Printed on: {{ print_date }}
+    </div>
+</body>
+</html>

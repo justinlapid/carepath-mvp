@@ -1,0 +1,641 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CarePath</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 8px;
+            max-width: 900px;
+            margin: 40px auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        /* Logo Styles */
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            max-width: 200px;
+            height: auto;
+        }
+        /* Upload Area Styles */
+        .upload-area {
+            border: 2px dashed #041a55;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s, border-color 0.3s;
+            background-color: #fafafa;
+            position: relative;
+        }
+        .upload-area.dragover {
+            background-color: #e0f7ff;
+            border-color: #041a55;
+        }
+        input[type=file] {
+            display: none;
+        }
+        /* Selected File Name */
+        .selected-file {
+            margin-top: 10px;
+            color: #041a55;
+            font-weight: bold;
+        }
+        /* Button Styles */
+        button {
+            background-color: #041a55;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #1e60d1;
+        }
+        /* Flash Message Styles */
+        .flash-message {
+            background-color: #ffe6e6;
+            border-left: 6px solid #ff4d4d;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #cc0000;
+        }
+        /* Collapsible Section Styles */
+        .collapsible {
+            background-color: #041a55;
+            color: white;
+            cursor: pointer;
+            padding: 12px 16px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 16px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.3s;
+        }
+        .active, .collapsible:hover {
+            background-color: #1e60d1;
+        }
+        .collapsible:after {
+            content: '\25BC';
+            font-size: 12px;
+            color: white;
+            float: right;
+            margin-left: 5px;
+        }
+        .active:after {
+            content: "\25B2";
+        }
+        .content {
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #f9f9f9;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            border-radius: 0 0 8px 8px;
+            margin-bottom: 15px;
+        }
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;  /* Ensures no space between borders */
+            margin-top: 10px;
+            border: none;  /* Removes any external border */
+            box-shadow: none;  /* Ensure no shadow is applied to the table */
+            border-radius: 0;  /* Removes any rounding of borders */
+            padding: 0;  /* Ensures no internal padding */
+        }
+        table, th, td {
+            border: 1px solid #ddd; /* Applies individual borders to the table cells */
+        }
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #e6f2ff;
+            color: #003366;
+            width: 30%;
+        }
+        td {
+            background-color: #ffffff;
+            color: #333333;
+        }
+        
+        /* Ensure .content does not add padding or extra borders */
+        .content {
+            padding: 0;  /* Removes internal padding */
+            border: none;  /* Removes any borders around the content */
+            background-color: transparent;  /* Makes the background transparent */
+            box-shadow: none;  /* Removes any potential shadows */
+        }
+        
+        /* Ensure collapsible buttons also have no impact on table appearance */
+        .collapsible {
+            border: none; /* Removes border from collapsible button */
+            box-shadow: none; /* Removes shadow from collapsible button */
+        }
+        
+        /* Optionally ensure no margin between the collapsible button and content */
+        .collapsible + .content {
+            margin-top: 0;
+        }
+            
+        /* Extracted Text Styles */
+        .extracted-text {
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 35px;
+            font-size: 14px;
+            color: #333;
+        }
+        /* Loading Overlay and Spinner */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3; /* Light gray */
+            border-top: 8px solid #041a55; /* Brand blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 10000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* 5% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        /* Responsive iframe for PDF */
+        .preview-iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+
+        /* Download Summary Button */
+        .download-summary-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #041a55;
+            color: #fff;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .download-summary-btn:hover {
+            background-color: #1e60d1;
+            transform: translateY(-2px);
+        }
+
+        /* Download Summary Button Icon (Optional) */
+        .download-summary-btn::after {
+            content: "📄";
+            margin-left: 8px;
+        }
+        /* Subheader Styles */
+        .subheader-gray {
+            color: gray;
+            margin-top: 10px;
+        }
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border: none;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #e6f2ff;
+            color: #003366;
+            width: 30%;
+        }
+        td {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        /* Dropdown Component Styles */
+        .dropdown {
+            width: 100%; /* Ensure the dropdown takes full width */
+            background-color: #3f51b5; /* Example background color */
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%; /* Match the table width to the dropdown */
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            text-align: left;
+            font-size: 12px; /* Smaller font size */
+        }
+
+        th, td {
+            padding: 6px 8px; /* Smaller padding */
+            text-align: left;
+        }
+
+        th {
+            background-color: #e3f2fd; /* Example header background color */
+            color: #333333;
+        }
+
+        td {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        /* Additional styles if needed... */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Fixed Company Logo -->
+        <div class="logo">
+            <img src="{{ url_for('static', filename='company_logo.png') }}" alt="CarePath Logo">
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-message">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Documentation Upload Form -->
+        <form method="post" enctype="multipart/form-data" id="upload-form">
+            {% if not extracted_data %}
+                <div class="upload-area" id="upload-area">
+                    <p>Drag and drop a file here or click to browse.</p>
+                    <input type="file" name="file" id="file-input" accept=".txt,.pdf,.png,.jpg,.jpeg,.gif,.docx">
+                </div>
+                <div class="selected-file" id="selected-file"></div> <!-- Display selected file name -->
+                <button type="submit">Upload Documentation</button>
+            {% else %}
+                <div class="action-buttons">
+                    <button type="button" id="upload-new-btn">Upload Documentation</button>
+                    <button type="button" id="preview-btn">Preview Uploaded Documentation</button>
+                </div>
+            {% endif %}
+        </form>
+
+        {% if extracted_data and 'error' not in extracted_data %}
+            <!-- Dynamic Title: LAST NAME, FIRST NAME (DOB) -->
+            <h3>
+                {{ extracted_data['Demographics'].get('Last Name', 'Unknown') }}, 
+                {{ extracted_data['Demographics'].get('First Name', 'Unknown') }} 
+                ({{ extracted_data['Demographics'].get('DOB', 'Unknown') }})
+            </h3>
+            <h4 class="subheader-gray">Extracted Data:</h4>
+            
+            <!-- Demographics Collapsible Section -->
+            {% set demographics = extracted_data['Demographics'] | dictsort %}
+            {% set demographics_filtered = demographics | selectattr('1', '!=', '') | list %}
+            {% if demographics_filtered %}
+                <button type="button" class="collapsible">Demographics</button>
+                <div class="content">
+                    <table>
+                        <tbody>
+                            {% for key, value in demographics_filtered %}
+                                <tr>
+                                    <th>{{ key }}</th>
+                                    <td>{{ value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+            <!-- Insurance Collapsible Section -->
+            {% set insurance = extracted_data['Insurance'] | dictsort %}
+            {% set insurance_filtered = insurance | selectattr('1', '!=', '') | list %}
+            {% if insurance_filtered %}
+                <button type="button" class="collapsible">Insurance</button>
+                <div class="content">
+                    <table>
+                        <tbody>
+                            {% for key, value in insurance_filtered %}
+                                <tr>
+                                    <th>{{ key }}</th>
+                                    <td>{{ value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+            <!-- Clinical Details Collapsible Section -->
+            {% set clinical_details = extracted_data['Clinical Details'] | dictsort %}
+            {% set clinical_details_filtered = clinical_details | selectattr('1', '!=', '') | list %}
+            {% if clinical_details_filtered %}
+                <button type="button" class="collapsible">Clinical Details</button>
+                <div class="content">
+                    <table>
+                        <tbody>
+                            {% for key, value in clinical_details_filtered %}
+                                <tr>
+                                    <th>{{ key }}</th>
+                                    <td>{{ value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+            <!-- Medical Information Collapsible Section -->
+            {% set medical_info = extracted_data['Medical Information'] %}
+            {% set medical_info_filtered = {} %}
+            {% for section, items in medical_info.items() %}
+                {% set non_empty_items = items | select('!=', '') | list %}
+                {% if non_empty_items %}
+                    {% set _ = medical_info_filtered.update({section: non_empty_items}) %}
+                {% endif %}
+            {% endfor %}
+            {% if medical_info_filtered %}
+                <button type="button" class="collapsible">Medical Information</button>
+                <div class="content">
+                    {% for section, items in medical_info_filtered.items() %}
+                        <h4>{{ section }}</h4>
+                        <table>
+                            <tbody>
+                                {% for item in items %}
+                                    <tr>
+                                        <th>{{ section }} {{ loop.index }}</th>
+                                        <td>{{ item }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Download Summary Button -->
+            <button class="download-summary-btn" onclick="window.location.href='{{ url_for('download_summary') }}'">Download Summary</button>
+        {% elif extracted_data and 'error' in extracted_data %}
+            <h3>Error:</h3>
+            <p>{{ extracted_data['error'] }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Modal for Preview -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Preview Documentation</h3>
+            <div id="preview-content">
+                <!-- Preview will be loaded here -->
+            </div>
+            <button id="download-btn">Download Documentation</button>
+        </div>
+    </div>
+
+    <script>
+        // Loading Animation for Documentation Upload
+        const uploadForm = document.getElementById('upload-form');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function() {
+                loadingOverlay.style.display = 'flex';
+            });
+        }
+
+        // Upload New Documentation Button
+        const uploadNewBtn = document.getElementById('upload-new-btn');
+        if (uploadNewBtn) {
+            uploadNewBtn.addEventListener('click', function() {
+                window.location.href = "{{ url_for('upload_file') }}";
+            });
+        }
+
+        // Preview Button and Modal
+        const previewBtn = document.getElementById('preview-btn');
+        const modal = document.getElementById('preview-modal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        const previewContent = document.getElementById('preview-content');
+        const downloadBtn = document.getElementById('download-btn');
+
+        if (previewBtn) {
+            previewBtn.addEventListener('click', function() {
+                // Fetch the uploaded filename from the server-side session
+                const filename = "{{ session.get('uploaded_filename', '') }}";
+                if (!filename) {
+                    alert('No file uploaded to preview.');
+                    return;
+                }
+
+                // Determine file type by extension
+                const ext = filename.split('.').pop().toLowerCase();
+                let previewURL = "{{ url_for('preview_file', filename='') }}" + filename;
+
+                if (['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext)) {
+                    // Image preview
+                    previewContent.innerHTML = `<img src="${previewURL}" alt="Uploaded Image" style="max-width: 100%; height: auto;">`;
+                } else if (ext === 'pdf') {
+                    // PDF preview
+                    previewContent.innerHTML = `<iframe src="${previewURL}" class="preview-iframe"></iframe>`;
+                } else if (ext === 'txt') {
+                    // Text file preview
+                    fetch(previewURL)
+                        .then(response => response.text())
+                        .then(text => {
+                            previewContent.innerHTML = `<pre>${text}</pre>`;
+                        })
+                        .catch(error => {
+                            previewContent.innerHTML = `<p>Error loading text file.</p>`;
+                        });
+                } else if (ext === 'docx') {
+                    // DOCX preview not supported
+                    previewContent.innerHTML = `<p>Preview not available for DOCX files. Please download to view.</p>`;
+                } else {
+                    // Unsupported file type
+                    previewContent.innerHTML = `<p>Preview not available for this file type. Please download to view.</p>`;
+                }
+
+                // Set download link
+                downloadBtn.onclick = function() {
+                    window.location.href = "{{ url_for('download_file', filename='') }}" + filename;
+                };
+
+                // Show the modal
+                modal.style.display = "block";
+            });
+        }
+
+        // Close Modal
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+            previewContent.innerHTML = '';
+        }
+
+        // Close Modal when clicking outside of the modal content
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+                previewContent.innerHTML = '';
+            }
+        }
+
+        // Drag and Drop Functionality for Documentation Upload
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const selectedFileDiv = document.getElementById('selected-file');
+
+        if (uploadArea) {
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    selectedFileDiv.textContent = `Selected File: ${files[0].name}`;
+                }
+            });
+
+            // Also handle file selection via dialog
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    selectedFileDiv.textContent = `Selected File: ${fileInput.files[0].name}`;
+                } else {
+                    selectedFileDiv.textContent = '';
+                }
+            });
+        }
+
+        // Toggle Collapsible Sections
+        var coll = document.getElementsByClassName("collapsible");
+        for (let i = 0; i < coll.length; i++) {
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.display === "block") {
+                    content.style.display = "none";
+                } else {
+                    content.style.display = "block";
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+Flask
+werkzeug
+python-docx
+PyPDF2
+pillow
+pytesseract
+openai
+pdf2image
+python-dotenv
+weasyprint
