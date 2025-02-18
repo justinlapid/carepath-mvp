@@ -4,7 +4,7 @@ python-docx
 PyPDF2
 pillow
 pytesseract
-openai
+openai==0.27.0
 pdf2image
 python-dotenv
 weasyprint
